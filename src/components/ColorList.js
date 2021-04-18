@@ -1,5 +1,8 @@
 import React, { useState } from "react";
 import axios from "axios";
+import { axiosWithAuth } from '../helpers/axiosWithAuth';
+import Color from './Color'
+import EditMenu from './EditMenu'
 
 const initialColor = {
   color: "",
@@ -17,10 +20,31 @@ const ColorList = ({ colors, updateColors }) => {
 
   const saveEdit = e => {
     e.preventDefault();
-
+      axiosWithAuth().put(`http://localhost:5000/api/colors/${colorToEdit.id}`, colorToEdit)
+    .then(res => {
+      console.log("save edit ColorList.js Res: ", res);
+      axiosWithAuth().get(`http://localhost:5000/api/colors`)
+        .then(res => {
+          updateColors(res.data);
+        })
+        .catch(err => console.error("Could not retrieve colors(saveEdit ColorList.js): ", err.message));
+        setEditing(false);
+    })
+    .catch(err => console.error("Could not save: ", err.message));
   };
 
   const deleteColor = color => {
+
+    axiosWithAuth().delete(`http://localhost:5000/api/colors/${color.id}`)
+      .then(res => {
+        console.log("deleteColor ColorList Res: ", res);
+        axiosWithAuth().get(`http://localhost:5000/api/colors`)
+          .then(res => {
+            updateColors(res.data);
+          })
+          .catch(err => console.error("Cannot fetch colors: ", err.message));
+      })
+      .catch(err => console.error("Cannot delete: ", err.message));
   };
 
   return (
@@ -29,7 +53,7 @@ const ColorList = ({ colors, updateColors }) => {
       <ul>
         {colors.map(color => <Color key={color.id} editing={editing} color={color} editColor={editColor} deleteColor={deleteColor}/>)}
       </ul>
-      
+
       { editing && <EditMenu colorToEdit={colorToEdit} saveEdit={saveEdit} setColorToEdit={setColorToEdit} setEditing={setEditing}/> }
 
     </div>
