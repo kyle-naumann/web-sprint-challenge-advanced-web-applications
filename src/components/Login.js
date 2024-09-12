@@ -1,22 +1,64 @@
-import React, { useEffect } from "react";
+import React, { useState } from "react";
+import { useHistory } from "react-router-dom";
+import axios from "axios"
+
+const initialState = {
+  username: "",
+  password: "",
+  errorMessage: ""
+};
 
 const Login = () => {
+  const [user, setUser] = useState(initialState);
+  const { push } = useHistory();
   // make a post request to retrieve a token from the api
   // when you have handled the token, navigate to the BubblePage route
+  const handleChange = e => {
+    setUser({
+      ...user,
+      [e.target.name]: e.target.value
+    });
+  };
 
-  useEffect(()=>{
-    // make a post request to retrieve a token from the api
-    // when you have handled the token, navigate to the BubblePage route
-  });
-  
+  const login = e => {
+    e.preventDefault();
+
+  axios.post(`http://localhost:5000/api/login`, user)
+    .then(res => {
+      console.log("Login event handler Res: ", res);
+      localStorage.setItem("token", res.data.payload);
+      setUser({
+        ...user,
+        errorMessage: ""
+      });
+      push("/private");
+    })
+    .catch(err => {
+      console.error("Could not log in: ", err.message);
+      setUser({
+        ...user,
+        errorMessage: "Username or Password not valid"
+      });
+    });
+}
   const error = "";
   //replace with error state
 
   return (
     <div>
       <h1>Welcome to the Bubble App!</h1>
-      <div data-testid="loginForm" className="login-form">
-        <h2>Build login form here</h2>
+      <div data-testid= "loginForm" className= "login-form">
+      { user.errorMessage && <h3 className="error" style={{text: "blue"}}> { user.errorMessage } </h3> }
+      <form onSubmit={login}>
+        <label htmlFor="username">Username: </label>
+        <input name="username" id="username" onChange={handleChange} type="text" />
+
+        <label htmlFor="password">Password: </label>
+        <input name="password" id="password" onChange={handleChange} type="password" />
+
+        <button name="login" >Login</button>
+      </form>
+
       </div>
 
       <p data-testid="errorMessage" className="error">{error}</p>
